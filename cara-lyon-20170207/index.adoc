@@ -1,0 +1,76 @@
+# Notes sur la présentation de BDD via le REX de Proximedia
+
+## Contexte
+La Société Proximédia footnote:[https://www.proximedia.fr/], présente dans 4 pays, gère 50000 sites et édite un CMS maison: Jukwaa. Elle a présenté un retour d'expérience sur le BDD lors du CARA Lyon du 07/02/2017 footnote:[https://www.meetup.com/fr-FR/CARA-Lyon/events/237161956/].
+
+## BDD pour Behaviour Driven Design
+L'idée du BDD footnote:[https://fr.wikipedia.org/wiki/Behavior_driven_development] est de piloter la réalisation d'une application à partir des comportements que l'on en attend.
+
+## Pourquoi le BDD
+Cela permet d'une part la mise en place d'une documentation vivante, et d'autre part de mettre en oeuvre des scénarios de fonctionnement directement à partir des "stories" dont le périmètre fait office de critères d'acceptation.
+
+De plus, les étapes définies et implémentées au fur et à mesure de la réalisation de l'application permettent d'appliquer le principe du DRY (pour Don't Repeat Yourself footnote:[https://fr.wikipedia.org/wiki/Ne_vous_r%C3%A9p%C3%A9tez_pas]).
+
+Dans ce contexte, la pratique du BDD permet de simplifier la définition des features (fonctionnalités), ainsi que leur validation.
+
+## Mise en place
+
+### Principe
+L'expression des différents scénarios à tester est faite à partir des stories du backlog footnote:[https://fr.wikipedia.org/wiki/Scrum_(Boite_%C3%A0_outils)#Carnet_de_sprint_.28sprint_backlog.29], formalisées sous forme de postulats (en tant que xxx, je souhaite yyy afin de zzz footnote:[https://fr.wikipedia.org/wiki/R%C3%A9cit_utilisateur]).
+
+Les différents acteurs du système sont représentés sous forme de personae (utilisateurs fictifs), par opposition à des utilisateurs génériques qu'on utilise habituellement.
+
+### Implémentation des différents acteurs
+L'implémentation des personae est faite sous forme de fixtures footnote:[https://fr.wikipedia.org/wiki/Test_fixture] (à la façon de tests traditionnels).
+
+### Implémentation des scénarios
+Les stories du backlog sont transposées sous forme de scénarios à l'aide du langage Gherkin footnote:[https://github.com/cucumber/cucumber/wiki/Gherkin]. Ce langage fonctionne aussi par postulats (given xxx, when yyy and zzz, then ttt).
+
+Les scénarios sont ensuite inteprétés par Cucumber footnote:[https://github.com/cucumber/cucumber] qui génère le code source d'un ensemble d'étapes d'exécution de tests E2E footnote:[https://www.tutorialspoint.com/software_testing_dictionary/end_to_end_testing.htm] (end to end, soit la simulation d'actions de l'utilisateur directement sur l'interface graphique de l'application).  Ces étapes sont exécutées pour effectuer le déroulement de chaque scénario.
+
+Si des étapes ont déjà été implémentées, elles sont réutilisées. Dans le cas contraire, un squelette est proposé pour l'étape. On le complète donc à l'aide d'expressions rationnelles footnote:[https://fr.wikipedia.org/wiki/Expression_rationnelle] qui permettent de le généraliser, et par l'implémentation d'actions technique à réaliser sur l'interface graphique (comme pour un test E2E classique).
+
+Stratégie adoptée face aux évolutions de l'interface graphique
+une librairie intermédiaire "propriétaire" est utilisée pour faire tampon face aux évolutions des éléments graphiques (en particulier, les éléments du DOM) afin d'éviter de perdre trop de temps pour leur prise en compte.
+
+## Outillage technique
+
+La batterie de tests E2E qui résulte de ce processus est effectuée en complément de tests unitaire et d'intégration réalisés en parallèle sur l'API exposée par Symfony.
+
+Invision est utilisé pour la réalisation de wireframes.
+
+Le frontend de l'application est réalisé avec AngularJS footnote:[https://angularjs.org/]. Par conséquent, Protractor footnote:[http://www.protractortest.org/] a été utilisé pour la mise en place de tests E2E (notamment l'injection de CucumberJS et la configuration de l'environnement technique dans lequel ils se déroulent).
+
+Gulp footnote:[http://gulpjs.com/] est utilisé pour piloter l'exécution des tests.
+
+Au-dessus, Ant footnote:[https://ant.apache.org/] est utilisé pour piloter l'ensemble des tâches technique nécessaires à la mise en place du contexte des tests.
+
+Un container docker footnote:[https://www.docker.com/what-docker] est utilisé pour gérer les instances des serveurs Selenium footnote:[http://www.seleniumhq.org/] utilisés par Protractor.
+
+Les scénarios sont exécutés sur un environnement de préproduction, sur un serveur d'intégration continue.
+
+## Organisation
+
+Les critères d'acceptation sont directement rédigés dans le gestionnaire de tickets JIRA.
+
+Les tests E2E, au même titre que les tests unitaires et d'intégration, font partie du DOD (Definition of Done footnote:[https://www.scrumalliance.org/community/articles/2008/september/definition-of-done-a-reference]) et donc considérés comme livrables.
+
+La rédaction des scénarios est effectuée par le product owner, et par les membres de l'équipe UX. L'implémentation des tests est ensuite gérée par les développeurs.
+
+## Conclusion
+
+La mise en place de cette solution a été longue et difficile (1 an de R&D). En effet, plusieurs combinaisons techniques ont été étudiées avant d'adopter une solution technique qui soit humainement lisible et adaptée aux différents acteurs.
+
+Elle engendre une démarche de factorisation et de décomposition des différentes stories et tire avantage de la séparation backend (symfony) / frontend (Angular).
+
+L'utilisation du langage Gherkin demande un certain temps d'adaptation.
+
+L'implémentation et la gestion des tests représente environ 60% du temps de travail vis à vis du temps de développement.
+
+Dans l'idéal, il vaut mieux éviter d'avoir des dépendances entre les différents tests (hors authentification).
+
+L'implémentation des tests à la mode TDD présuppose que soient déterminés les éléments le DOM (ou plutôt du modèle au sens AngularJS) à l'avance.
+
+Certains tests sont pratiquement impossible à implémenter avec ce système, notamment pour des fonctionnalités basées sur le drag and drop.
+
+Contrairement à d'autres retours d'expérience, la base de tests existante est relativement solide et il est rare de devoir dédier une personne à sa maintenance.
